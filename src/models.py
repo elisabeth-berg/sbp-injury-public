@@ -24,7 +24,7 @@ class InjuryModel():
             min_samples_split=2
             n_estimators=1000
             self.model = RandomForestClassifier(
-                max_depth=5,
+                max_depth=6,
                 min_samples_split=2,
                 n_estimators=1000)
 

@@ -89,3 +89,33 @@ def bootstrapped_roc2(y_trues_gb, y_hats_gb, y_trues_rf, y_hats_rf, all_plots=Tr
     ax.yaxis.set_tick_params(labelsize = 12)
     plt.show()
     return plt, fig, ax
+
+
+def plot_feat_scores(fit_model, feat_names, filepath=None):
+    """
+    Create a horizontal bar plot of the feature importances in decreasing order
+    of importance. Optionally save the figure to the filepath.
+
+    Input
+    ------
+    fit_model : A model with attribute "feature_importances_", already fit.
+
+    Output
+    ------
+    fig, ax : Matplotlib plotting objects
+    """
+
+    feat_scores = pd.DataFrame({
+    'Fraction of Samples Affected' : fit_model.feature_importances_ },
+                           index=feat_names)
+    feat_scores = feat_scores.sort_values(by='Fraction of Samples Affected')
+
+    fig, ax = plt.subplots(figsize=(8,11))
+    feat_scores.plot(ax=ax, kind='barh', color='g')
+    ax.xaxis.set_tick_params(labelsize = 12)
+    ax.yaxis.set_tick_params(labelsize = 14)
+    ax.set_title('Feature Importances', size='xx-large')
+    ax.legend(fontsize='x-large', loc='lower right')
+    if filepath:
+        fig.savefig(filepath)
+    return fig, ax

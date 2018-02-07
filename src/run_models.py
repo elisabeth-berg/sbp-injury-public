@@ -4,6 +4,7 @@ import multiprocessing
 import pickle
 import boto3
 
+from sklearn.cross_validation import KFold
 from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
 from sklearn.model_selection import train_test_split
@@ -25,6 +26,74 @@ def put_pickle_model(fit_model, filename):
         s3 = boto3.client('s3')
         s3.put_object(Bucket='sbp-data-etc',
                       Body=open('model.pkl', 'rb'), Key=filename)
+
+
+def make_params(tree_depths, n_folds, X, y):
+    """
+    Create a list of parameters to input into crossval_one for parallelization.
+
+    Input
+    ------
+    tree_depths : List of tree_depths to gridsearch across
+    n_folds : The number of folds to use in K-fold CV
+    X : Full dataset, a numpy array
+    y : Labels, a numpy array
+
+    Output
+    ------
+    params : A list containing tuples (td, k, X_train, y_train, X_test, y_test)
+             The length of params will be len(tree_depths) * n_folds
+    """
+    params = []
+    for td in tree_depths:
+        for k, (train_idxs, test_idxs) in enumerate(KFold(n=X.shape[0],
+                                                             n_folds=n_folds,
+                                                             shuffle=True,
+                                                             random_state=1)):
+
+            X_train, y_train = X[train_idxs, :], y[train_idxs]
+            X_test, y_test = X[test_idxs, :], y[test_idxs]
+            params.append((td, k, X_train, y_train, X_test, y_test))
+    return params
+
+
+def crossval_one(params):
+    """
+    Perform one fold of cross-validation on GB model with one tree depth
+
+    Input
+    ------
+    params : The output of make_params
+
+    Output
+    ------
+    td : The tree depth at the current stage
+    k : The current cross-validation fold (can be used to map back to X and y from params)
+    test_scores : A list, the model loss at each stage
+    model : The model trained on the given parameters
+
+    Use for parallelization of GB gridsearch:
+        >>> tree_depths = [1, 2, 3]
+        >>> k=10
+        >>> params = make_params(tree_depths, k, X, y)
+        >>> pool = multiprocessing.Pool(50)
+        >>> results = pool.map(crossval_one, params)
+    """
+    (td, k, X_train, y_train, X_test, y_test) = params
+    test_errors = []
+    log_losses = []
+    aucs = []
+    model = GradientBoostingClassifier(n_estimators=1500,
+                                    max_depth=td, learning_rate=0.005,
+                                    subsample=0.5)
+    model.fit(X_train, y_train)
+
+    for j, y_pred in enumerate(model.staged_predict(X_test)):
+        test_errors.append(model.loss_(y_test, y_pred))
+        log_losses.append(log_loss(y_test, y_pred))
+        aucs.append(roc_auc_score(y_test, y_pred))
+    return td, k, test_errors, log_losses, aucs, model
+
 
 
 def run_bunch(X, y, n_splits, model_type, pool_size):

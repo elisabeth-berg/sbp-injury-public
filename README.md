@@ -9,6 +9,7 @@ The [Seattle Bouldering Project](seattlboulderingproject.com) is currently alloc
 
 To address these issues, random forest and gradient boosted models were created to predict the probability of injury on a given visit to the gym. Features from the models were then extracted and analyzed to identify key risk factors and make recommendations for injury prevention strategies. 
 
+---
 
 ### Questions:
 #### 1. Who is getting injured?
@@ -21,29 +22,33 @@ To address these issues, random forest and gradient boosted models were created 
 ### The Data: 
 ![alt text](https://github.com/elisabeth-berg/sbp-injury/blob/master/img/data.png)
 
-
-* Incident reports from 2016 and 2017: Qualitative data about every injury that occurred within the gym.  
-
-   `| name | birthdate | date | time | description | injury | location | color | 911 |`  
-   
-     &nbsp;&nbsp;&nbsp; `description` : an unstructured description of the incident.  
-     &nbsp;&nbsp;&nbsp; `injury` : bodily location of the injury.   
-     &nbsp;&nbsp;&nbsp; `location` : area of the gym in which the incident occurred.  
-     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; `color` : difficulty level of the climb.  
-     &nbsp;&nbsp;&nbsp; `911` : boolean, True if 911 was called in response to the incident.  
+* Incident reports from 2016 and 2017: Qualitative data (name, date, description, location, etc.) about every injury that occurred within the gym, handwritten and then typed into a spreadsheet. 
    
 * User check-ins from 2011-2017: A record of every visit to the gym since it opened. 
-
-   `| date | hour | name | age_as_of_report_end | user_type |`  
-   
-   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; `age_as_of_report_end` : age on the date that the report was generated (2017-12-22).  
-   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; `user_type` : membership status, one of `'MEMBER'`, `'PUNCH CARD'`, or `'GUEST'`.
    
 * Employee timesheets from 2016 and 2017: Clock-in and clock-out times for every employee. 
 
+The raw data described above contains user-sensitive material such as name and birthdate, so is not included in this repository.  
+
 ### Final Dataset: 
-Several features were engineered from the raw check-in data in order to capture user behavior and experience level. Relevent data from the incident reports and the employee timesheets were also merged into a final dataframe with the following features:  
- `hour | weekday | new_set | occupancy | num_employees | user_type | longevity | visit_count | visits_3 | visits_7 | visits_14 | visits_30` 
+The raw data was heavily cleaned, refactored, and merged to create a dataframe in which each row represents a single visit to the gym. 
+Several features were also engineered from the raw check-in data in order to capture user behavior and experience level. The final data used for the model is contained in `data/df_formodel.pkl` and contains the following features:  
+
+|      |                                   |
+|------|-----------------------------------|
+| hour | The hour that the user checked in |
+| weekday | 7 dummy variables, one for each day of the week |
+| new_set | Boolean, whether a new wall was set on this day before the time of checkin |
+| age | Current age of the visitor |
+| occupancy | The total number of people in the gym, under the assumption that each person climbs for 2 hours |
+| num_employes | The number of front desk & youth programs employees clocked in at the given day and hour |
+| user_type | 3 dummy variables: 'member', 'punch_card', and 'guest' |
+| longevity | The number of days since the user's first visit |
+| visit_count | The total number of times this user has been to the gym previously |
+| visits_3 | This user's number of visits in the last 3 days |
+| visits_7 | This user's number of visits in the last 7 days |
+| visits_14 | This user's number of visits in the last 14 days |
+| visits_30 | This user's number of visits in the last 30 days |
 
 
 ### The Models: 
@@ -59,16 +64,13 @@ Several features were engineered from the raw check-in data in order to capture 
 
 
 ### Conclusions & Actionable Insights: 
-#### 1. First time users are much more injury-prone. Additional measures should be taken to educate and support new visitors. 
+#### 1. First time users are particularly injury-prone. Additional measures should be taken to educate and support new visitors. 
 #### 2. Emphasize safety instruction for youth -- even those who have been climbing for a long time. 
 #### 3. Late hours tend to result in more injuries, regardless of the gym occupancy. Staff must remain attentive, even as the night winds down and the gym is less busy. 
 
 
 ### How to Run This:
 Load the full dataframe with features:  
-`s3 = boto3.client('s3')`  
-`pickled_data = s3.get_object(Bucket='sbp-data-etc', Key='df_formodel.pkl')`  
-`pickle_file = BytesIO(pickled_data['Body'].read())`  
-`df = pd.read_pickle(pickle_file)`  
+`df = pd.read_pickle('data/df_formodel.pkl')`  
 `X = df.drop(columns=['injured'])`    
 `y = df['injured']` 

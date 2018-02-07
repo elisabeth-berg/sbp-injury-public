@@ -60,7 +60,7 @@ Several features were also engineered from the raw check-in data in order to cap
 |`n_estimators = 1150` |   `n_estimators = 1000`|
 |`subsample = 0.5`|
 
-![alt text](https://github.com/elisabeth-berg/sbp-injury-pubplic/blob/master/img/roc_compare.png)
+![alt text](https://github.com/elisabeth-berg/sbp-injury-public/blob/master/img/roc_compare.png)
 
 
 

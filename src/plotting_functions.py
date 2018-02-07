@@ -119,3 +119,71 @@ def plot_feat_scores(fit_model, feat_names, filepath=None):
     if filepath:
         fig.savefig(filepath)
     return fig, ax
+
+
+def plot_pd_bootstraps(model, boot_models):
+    """
+    Create a partial dependence plot of a feature in a model, along with its
+    bootstrapped partial dependences.
+
+    Input
+    ------
+    model : The full fit model
+    boot_models : A list of models fit to bootstrapped samples of the data set 
+    """
+    fig, ax = plt.subplots(figsize=(12,3))
+    for M in boot_models:
+        plotting_functions.plot_partial_dependence(ax, M, df, 'age', color='g', alpha=0.05)
+    plotting_functions.plot_partial_dependence(ax, model, df, 'age', color='g', linewidth=3)
+    return fig, ax
+
+
+def plot_partial_dependence(ax, model, X, var_name,
+                            n_points=250, **kwargs):
+    """
+    Create a partial dependence plot of a feature in a model.
+
+    Input
+    ----------
+    ax: A matplotlib axis object to draw the partial dependence plot on.
+    model: A trained sklearn model.  Must implement a `predict` method.
+    X: The raw data to use in making predictions when drawing the partial
+    dependence plot. Must be a pandas DataFrame.
+    var_name: A string, the name of the variable to make the partial dependence
+    plot of.
+    n_points: The number of points to use in the grid when drawing the plot.
+
+    Very slightly adapted from madrury
+    """
+    Xpd = make_partial_dependence_data(X, var_name, n_points)
+    x_plot = Xpd[var_name]
+    y_hat = model.predict_proba(Xpd)[:,1]
+    ax.plot(x_plot, y_hat, **kwargs)
+
+
+def make_partial_dependence_data(X, var_name, n_points=250):
+    Xpd = np.empty((n_points, X.shape[1]))
+    Xpd = pd.DataFrame(Xpd, columns=X.columns)
+    all_other_var_names = set(X.columns) - {var_name}
+    for name in all_other_var_names:
+        if is_numeric_array(X[name]):
+            Xpd[name] = X[name].mean()
+        else:
+            # Array is of object type, fill in the mode.
+            array_mode = mode(X[name])[0][0]
+            Xpd[name] = mode
+    min, max = np.min(X[var_name]), np.max(X[var_name])
+    Xpd[var_name] = np.linspace(min, max, num=n_points)
+    return Xpd
+
+def is_numeric_array(arr):
+    """Check if a numpy array contains numeric data.
+    Source:
+        https://codereview.stackexchange.com/questions/128032
+    """
+    numerical_dtype_kinds = {'b', # boolean
+                             'u', # unsigned integer
+                             'i', # signed integer
+                             'f', # floats
+                             'c'} # complex
+    return arr.dtype.kind in numerical_dtype_kinds

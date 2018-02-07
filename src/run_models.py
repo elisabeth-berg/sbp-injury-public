@@ -1,14 +1,17 @@
 import pandas as pd
 import numpy as np
+import multiprocessing
+import pickle
+import boto3
+
 from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
 from sklearn.model_selection import train_test_split
-import multiprocessing
-from src import data_merge
 from sklearn.cluster import KMeans
-from sklearn.metrics import silhouette_score
-import pickle
-import boto3
+from sklearn.metrics import silhouette_score, roc_auc_score
+
+from src import data_merge
+from src import models
 
 
 def put_pickle_model(fit_model, filename):
@@ -24,7 +27,7 @@ def put_pickle_model(fit_model, filename):
                       Body=open('model.pkl', 'rb'), Key=filename)
 
 
-def run_bunch(X, y, n_splits, model, pool_size):
+def run_bunch(X, y, n_splits, model_type, pool_size):
     """
     Split X and y into train/test splits n_splits times, fit and make predictions
     in parallel.
@@ -34,7 +37,7 @@ def run_bunch(X, y, n_splits, model, pool_size):
     X : Feature matrix (numpy array)
     y : Labels corresponding to X rows (numpy array)
     n_splits : The number of train/test splits to perform
-    model : one of 'RF' or 'GB'
+    model_type : one of 'RFC' or 'GBC'
 
     Output
     ------
@@ -42,23 +45,22 @@ def run_bunch(X, y, n_splits, model, pool_size):
                    set, the corresponding predictions, and the AUC for this split.
     """
     pool = multiprocessing.Pool(pool_size)
-    splits = make_splits(X, y, n_splits)
-    if model == 'RF':
-        model_output = pool.map(predict_parallel_forest, splits)
-    elif model == 'GB':
-        model_output = pool.map(predict_parallel_boost, splits)
+    splits = make_splits(X, y, model_type, n_splits)
+
+    model_output = pool.map(predict_parallel, splits)
     model_output = pd.DataFrame(model_output)
     model_output.columns = ['indices', 'y_hat', 'auc']
     return model_output
 
 
-def make_splits(X, y, n_splits):
+def make_splits(X, y, model_type, n_splits):
     """
     Input
     ------
     X : Feature matrix (numpy array)
     y : Labels corresponding to X rows (numpy array)
     n_splits : The number of train test splits to perform
+    model_type : one of 'RFC' or 'GBC'
 
     Output
     ------
@@ -67,15 +69,15 @@ def make_splits(X, y, n_splits):
     splits = []
     for n in range(n_splits):
         X_train, X_test, y_train, y_test = train_test_split(X, y)
-        splits.append((X_train, X_test, y_train, y_test))
+        splits.append((X_train, X_test, y_train, y_test, model_type))
     return splits
 
 
-def predict_parallel_forest(splits):
+def predict_parallel(splits):
     """
     Input
     ------
-    splits : A list of train/test splits, the output of make_splits
+    splits : A tuple of train/test splits & model_type, the output of make_splits
 
     Output
     ------
@@ -85,68 +87,37 @@ def predict_parallel_forest(splits):
 
     ------
     This function can be implemented in parallel on an EC2 instance with at least n_splits cores.
-        splits = make_splits(df, n_splits)
-        pool = multiprocessing.Pool(n_splits)
-        results = pool.map(predict_parallel, splits)
+        >> splits = make_splits(df, n_splits)
+        >> pool = multiprocessing.Pool(n_splits)
+        >> results = pool.map(predict_parallel, splits)
 
     results will be a list of tuples (indices, y_hat, auc)
     """
-    (X_train, X_test, y_train, y_test) = splits
+    (X_train, X_test, y_train, y_test, model_type) = splits
     indices = X_test.index
-    model = RandomForestClassifier(
-        n_estimators=1000, max_depth=5, min_samples_split=2, n_jobs=4)
+    model = models.InjuryModel(model_type)
     model.fit(X_train, y_train)
-    y_hat = model.predict_proba(X_test)[:,1]
+    y_hat = model.predict(X_test)
     auc = roc_auc_score(y_test, y_hat)
     return indices, y_hat, auc
 
-
-def predict_parallel_boost(splits):
-    """
-    Input
-    ------
-    splits : A list of train/test splits, the output of make_splits
-    model_object :
-
-    Output
-    ------
-    indices : The test set indices of the original dataframe
-    y_hat : Predicted values
-    auc : AUC for this particular split
-
-    ------
-    This function can be implemented in parallel on an EC2 instance with at least n_splits cores.
-        splits = make_splits(df, n_splits)
-        pool = multiprocessing.Pool(n_splits)
-        results = pool.map(predict_parallel, splits)
-
-    results will be a list of tuples (indices, y_hat, auc)
-    """
-    (X_train, X_test, y_train, y_test) = splits
-    indices = X_test.index
-    model = GradientBoostingClassifier(
-        n_estimators=1150, learning_rate=0.005, max_depth=2, subsample=0.5)
-    model.fit(X_train, y_train)
-    y_hat = model.predict_proba(X_test)[:,1]
-    auc = roc_auc_score(y_test, y_hat)
-    return indices, y_hat, auc
 
 
 def bootstrap_train(model, X, y, bootstraps=1000, **kwargs):
-    """Train a (linear) model on multiple bootstrap samples of some data and
-    return all of the parameter estimates.
-    Parameters
-    ----------
-    model: A sklearn class whose instances have a `fit` method, and a `coef_`
-    attribute.
-    X: A two dimensional numpy array of shape (n_observations, n_features).
+    """
+    Train a model on multiple bootstrap samples of some data and
+    return the fit model.
 
+    Input
+    ----------
+    model: A sklearn class whose instances have a `fit` method
+    X: A two dimensional numpy array of shape (n_observations, n_features).
     y: A one dimensional numpy array of shape (n_observations).
     bootstraps: An integer, the number of boostrapped models to train.
-    Returns
+
+    Output
     -------
-    bootstrap_coefs: A (bootstraps, n_features) numpy array.  Each row contains
-    the parameter estimates for one trained boostrapped model.
+    bootstrap_models: A list of fit models.
     """
     bootstrap_models = []
     for i in range(bootstraps):

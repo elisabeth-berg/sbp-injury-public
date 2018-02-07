@@ -14,20 +14,23 @@ class InjuryModel():
         The parameters are the results of prior gridsearching.
         """
         if self.model_type == 'GBC':
-            max_depth = 2
-            n_estimators = 1150
-            learning_rate = 0.005
-            subsample = 0.5
-            self.model = GradientBoostingClassifier()
+            self.model = GradientBoostingClassifier(
+                max_depth = 2,
+                n_estimators = 1150,
+                learning_rate = 0.005,
+                subsample = 0.5)
         elif self.model_type == 'RFC':
             max_depth=5
             min_samples_split=2
             n_estimators=1000
-            self.model = RandomForestClassifier()
+            self.model = RandomForestClassifier(
+                max_depth=5,
+                min_samples_split=2,
+                n_estimators=1000)
 
         self.model.fit(X, y)
         self.feature_importances_ = self.model.feature_importances_
 
     def predict(self, X_test):
-        y_hat = self.model.predict(X_test)
+        y_hat = self.model.predict_proba(X_test)[:,1]
         return y_hat

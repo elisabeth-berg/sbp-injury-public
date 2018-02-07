@@ -1,7 +1,7 @@
 # Injury Report Analysis for Seattle Bouldering Project  
 Liz Berg | Galvanize, Inc. | The Seattle Bouldering Project | January 2018
 
-### Summary: 
+### Motivation: 
 The [Seattle Bouldering Project](seattlboulderingproject.com) is currently allocating energy and resources toward a broad goal of reducing the rate of climbing-related injuries in the gym. SBP hopes to gain actionable insights that may affect the structure of:
 * The content of safety information that is presented to visitors, and the method in which it is given
 * The priorities and attention of employees during their shifts, particularly during safety walks & facility checks
@@ -61,12 +61,18 @@ Several features were also engineered from the raw check-in data in order to cap
 |`n_estimators = 1150` |   `n_estimators = 1000`|
 |`subsample = 0.5`|
 
+Both models are able to pick up on subtle distinctions between visits that result in injury and those that do not. 
 
 
-### Conclusions & Actionable Insights: 
+### Conclusions & Insights: 
 #### 1. First time users are particularly injury-prone. Additional measures should be taken to educate and support new visitors. 
-#### 2. Emphasize safety instruction for youth -- even those who have been climbing for a long time. 
-#### 3. Late hours tend to result in more injuries, regardless of the gym occupancy. Staff must remain attentive, even as the night winds down and the gym is less busy. 
+![alt text](https://github.com/elisabeth-berg/sbp-injury-public/blob/master/img/pd_visit_count_zoom.png)
+
+#### 2. Emphasize safety instruction for youth -- even those who have been climbing for a long time.
+![alt text](https://github.com/elisabeth-berg/sbp-injury-public/blob/master/img/pd_age.png) 
+#### 3. Late hours tend to result in more injuries, regardless of the gym occupancy. Staff should be encouraged to remain attentive, even as the night winds down and the gym is less busy. 
+![alt text](https://github.com/elisabeth-berg/sbp-injury-public/blob/master/img/pd_hour.png)
+![alt text](https://github.com/elisabeth-berg/sbp-injury-public/blob/master/img/pd_occupancy.png)
 
 
 ### How to Run This:
@@ -74,3 +80,8 @@ Load the full dataframe with features:
 `df = pd.read_pickle('data/df_formodel.pkl')`  
 `X = df.drop(columns=['injured'])`    
 `y = df['injured']` 
+
+Fit a model:  
+`model = models.InjuryModel('RFC')`  (for Random Forest)  
+`model = models.InjuryModel('GBC')`  (for Gradient Boost)   
+`model.fit(X, y)`

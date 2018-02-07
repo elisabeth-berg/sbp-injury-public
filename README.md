@@ -7,7 +7,7 @@ The [Seattle Bouldering Project](seattlboulderingproject.com) is currently alloc
 * The priorities and attention of employees during their shifts, particularly during safety walks & facility checks
 * The routes that are set (specific holds, movements, climbing styles) . 
 
-To address these issues, random forest and gradient boosted models were created to predict the probability of injury on a given visit to the gym. Features from the models were then extracted and analyzed to identify key risk factors and make recommendations for injury prevention strategies. 
+To address these issues, random forest and gradient boosted models were created to predict the probability of injury on a given visit to the gym. Key features from the models were then extracted and analyzed to identify pertinent risk factors and make recommendations for injury prevention strategies. 
 
 ---
 
@@ -65,6 +65,9 @@ Several features were also engineered from the raw check-in data in order to cap
 
 
 Both models are able to pick up on subtle distinctions between visits that result in injury and those that do not. 
+Since the point of this research is to identify features that correlate with injury occurence, we would like to investigate how the model draws these distinctions.  
+
+The partial dependency plots shown below are generated from the random forest model, along with 100 models fit to bootstrapped data. The gradient boosted model demonstrated similar partial dependencies. 
 
 ![alt text](https://github.com/elisabeth-berg/sbp-injury-public/blob/master/img/pd_age.png) 
 ![alt text](https://github.com/elisabeth-berg/sbp-injury-public/blob/master/img/pd_longevity.png)

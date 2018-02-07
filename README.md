@@ -52,27 +52,35 @@ Several features were also engineered from the raw check-in data in order to cap
 
 
 ### The Models: 
-![alt text](https://github.com/elisabeth-berg/sbp-injury/blob/master/img/roc_compare.png)
 
 | Gradient Boost | Random Forest |
 |----------------|---------------|
-|`max_depth = 2` | `max_depth = 5`|
+|`max_depth = 2` | `max_depth = 6`|
 |`learning_rate = 0.005` | `min_samples_split = 2` | 
 |`n_estimators = 1150` |   `n_estimators = 1000`|
 |`subsample = 0.5`|
 
+![alt text](https://github.com/elisabeth-berg/sbp-injury-pubplic/blob/master/img/roc_compare.png)
+
+
+
 Both models are able to pick up on subtle distinctions between visits that result in injury and those that do not. 
 
+![alt text](https://github.com/elisabeth-berg/sbp-injury-public/blob/master/img/pd_age.png) 
+![alt text](https://github.com/elisabeth-berg/sbp-injury-public/blob/master/img/pd_longevity.png)
+![alt text](https://github.com/elisabeth-berg/sbp-injury-public/blob/master/img/pd_occupancy.png)
+![alt text](https://github.com/elisabeth-berg/sbp-injury-public/blob/master/img/pd_visit_count.png)
+![alt text](https://github.com/elisabeth-berg/sbp-injury-public/blob/master/img/pd_hour.png)
+![alt text](https://github.com/elisabeth-berg/sbp-injury-public/blob/master/img/pd_visits_30.png)
+![alt text](https://github.com/elisabeth-berg/sbp-injury-public/blob/master/img/pd_visits_14.png)
 
 ### Conclusions & Insights: 
 #### 1. First time users are particularly injury-prone. Additional measures should be taken to educate and support new visitors. 
-![alt text](https://github.com/elisabeth-berg/sbp-injury-public/blob/master/img/pd_visit_count_zoom.png)
 
 #### 2. Emphasize safety instruction for youth -- even those who have been climbing for a long time.
-![alt text](https://github.com/elisabeth-berg/sbp-injury-public/blob/master/img/pd_age.png) 
+
 #### 3. Late hours tend to result in more injuries, regardless of the gym occupancy. Staff should be encouraged to remain attentive, even as the night winds down and the gym is less busy. 
-![alt text](https://github.com/elisabeth-berg/sbp-injury-public/blob/master/img/pd_hour.png)
-![alt text](https://github.com/elisabeth-berg/sbp-injury-public/blob/master/img/pd_occupancy.png)
+
 
 
 ### How to Run This:

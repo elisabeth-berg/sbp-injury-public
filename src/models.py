@@ -20,7 +20,7 @@ class InjuryModel():
                 learning_rate = 0.005,
                 subsample = 0.5)
         elif self.model_type == 'RFC':
-            max_depth=5
+            max_depth=7
             min_samples_split=2
             n_estimators=1000
             self.model = RandomForestClassifier(

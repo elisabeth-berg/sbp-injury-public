@@ -104,7 +104,7 @@ Fit a model:
 `model = pickle.load(model_pkl)`
 
 Predict the probability of injury for a given visit:  
-`"""`   
+`"""`  
 `feature_values : a numpy array of values corresponding to the following features`  
 ` ['hour', 'new_set', 'age', 'visit_count', 'occupancy', 'longevity',  
        'num_employees', 'guest', 'member', 'punch', 'mon', 'tues', 'wed',  

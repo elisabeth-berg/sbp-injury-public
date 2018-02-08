@@ -87,12 +87,30 @@ The partial dependency plots shown below are generated from the random forest mo
 
 
 ### How to Run This:
+
+`import pandas as pd`  
+`import pickle`  
+`from src import models`  
+
+
 Load the full dataframe with features:  
 `df = pd.read_pickle('data/df_formodel.pkl')`  
 `X = df.drop(columns=['injured'])`    
 `y = df['injured']` 
 
 Fit a model:  
-`model = models.InjuryModel('RFC')`  (for Random Forest)  
-`model = models.InjuryModel('GBC')`  (for Gradient Boost)   
-`model.fit(X, y)`
+`model_pkl = open('rf_model.pkl', 'rb')`  (for Random Forest)  
+`model_pkl = open('gb_model.pkl', 'rb')`  (for Gradient Boost)   
+`model = pickle.load(model_pkl)`
+
+Predict the probability of injury for a given visit:  
+`"""`   
+`feature_values : a numpy array of values corresponding to the following features`  
+` ['hour', 'new_set', 'age', 'visit_count', 'occupancy', 'longevity',  
+       'num_employees', 'guest', 'member', 'punch', 'mon', 'tues', 'wed',  
+       'thurs', 'fri', 'sat', 'sun', 'visits_3', 'visits_7', 'visits_14', 'visits_30']`  
+` """`  
+`one_visit = feature_values.reshape(1, -1)`  
+`injury_prob = model.predict(one_visit)`  
+
+Note that automatic extraction of checkin features requires access to sensitive user information (name, birthdate), so you must input these values manually. Future work will anonymize each visitor by assigning a unique ID. This will enable public deployment of the feature engineering pipeline. 

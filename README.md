@@ -20,7 +20,7 @@ To address these issues, random forest and gradient boosted models were created 
 ---
 
 ### The Data: 
-![alt text](https://github.com/elisabeth-berg/sbp-injury/blob/master/img/data.png)
+![alt text](https://github.com/elisabeth-berg/sbp-injury-public/blob/master/img/data.png)
 
 * Incident reports from 2016 and 2017: Qualitative data (name, date, description, location, etc.) about every injury that occurred within the gym, handwritten and then typed into a spreadsheet. 
    

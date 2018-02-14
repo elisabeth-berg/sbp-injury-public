@@ -121,7 +121,7 @@ def plot_feat_scores(fit_model, feat_names, filepath=None):
     return fig, ax
 
 
-def plot_pd_bootstraps(model, boot_models):
+def plot_pd_bootstraps(model, boot_models, var_name):
     """
     Create a partial dependence plot of a feature in a model, along with its
     bootstrapped partial dependences.
@@ -129,12 +129,14 @@ def plot_pd_bootstraps(model, boot_models):
     Input
     ------
     model : The full fit model
-    boot_models : A list of models fit to bootstrapped samples of the data set 
+    boot_models : A list of models fit to bootstrapped samples of the data set
+    var_name : A string, the name of the variable to make the partial dependence 
+    plot of.
     """
     fig, ax = plt.subplots(figsize=(12,3))
     for M in boot_models:
-        plotting_functions.plot_partial_dependence(ax, M, df, 'age', color='g', alpha=0.05)
-    plotting_functions.plot_partial_dependence(ax, model, df, 'age', color='g', linewidth=3)
+        plotting_functions.plot_partial_dependence(ax, M, df, var_name, color='g', alpha=0.05)
+    plotting_functions.plot_partial_dependence(ax, model, df, var_name, color='g', linewidth=3)
     return fig, ax
 
 
